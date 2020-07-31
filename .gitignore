@@ -30,4 +30,3 @@ node_modules/
 .env
 
 # db library 
-lib/
