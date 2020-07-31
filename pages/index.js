@@ -1,12 +1,25 @@
 import React from 'react';
 import Link from 'next/link';
 import LayoutWithFooter from '../components/LayoutWithFooter';
+import {db} from '../lib/db'
 
 export default class Index extends React.Component {
-    
-    state = {
-        job_type : '',
-        job_location : ''
+    constructor (props){
+        super(props)
+        this.initialState = {
+            job_type : '',
+            job_location : '',
+            areas : this.props.areas || []
+        }
+        this.state = this.initialState
+    }
+    static async getInitialProps(){
+        let areas = []
+        const querySnapshotArea = await db.collection('area').get()
+        querySnapshotArea.forEach(doc => {
+            areas.push(Object.assign({id : doc.id, data : doc.data()}))
+        })
+        return {areas}
     }
     handleChange = (event) => {
         console.log(event.target);
@@ -17,6 +30,8 @@ export default class Index extends React.Component {
         console.log(this.state.job_location);
     }
     render (){
+        const areas = this.state.areas
+        console.log(areas)
         return (
             
         <LayoutWithFooter title="Home">
@@ -38,24 +53,23 @@ export default class Index extends React.Component {
                                 
                                 <form action="#" className="search-box" style={{marginBottom : 100}}>
                                     <div className="row" style={{width : 80 + "%"}}>
-                                    <select name="job_location" id="select1" onChange={this.handleChange} className="form-control select-itms" style={{width : 40 + "%",height : 4.5 + "em", marginRight : 2.5+"em", marginLeft : 1+ "em"}}>
-                                                <option value="" disabled selected>Employment Type</option>
-                                                <option value="">Full Time</option>
-                                                <option value="">Part Time</option>
+                                        <select name="job_type" id="job_type" onChange={this.handleChange} className="form-control select-itms" style={{width : 40 + "%",height : 4.5 + "em", marginRight : 2.5+"em", marginLeft : 1+ "em"}}>
+                                                <option value="">Any Job Type</option>
+                                                <option value="Full">Full Time</option>
+                                                <option value="Part">Part Time</option>
                                         </select>
-                                        <select name="job_location" id="select1" onChange={this.handleChange} className="form-control select-itms" style={{width : 40 + "%",height : 4.5 + "em" ,  marginLeft : 1+ "em"}}>
-                                                <option value="" disabled selected>Work Location</option>
-                                                <option value="Hokkaido">Hokkaido</option>
-                                                <option value="Honshu">Honshu</option>
-                                                <option value="Shikoku">Shikoku </option>
-                                                <option value="Kyushu">Kyushu</option>
-                                                <option value="Okinawa">Okinawa</option>
+                                        <select name="job_location" id="job_location" onChange={this.handleChange} className="form-control select-itms" style={{width : 40 + "%",height : 4.5 + "em" ,  marginLeft : 1+ "em"}}>
+                                                <option value="">All Location</option>
+                                                {areas && areas.map(area => 
+                                                    (<option value={area.id}>{area.data.name}</option>)
+                                                )}
+                                                
                                         </select>
                                     </div>
                                         
                                     <div className="search-form">
                                         <Link href="" >
-                                        <a onClick = {this.handleSearch}>Find job</a>
+                                        <Link href={`/job_listing?type=${this.state.job_type}&location=${this.state.job_location}`}><a>Find job</a></Link>
                                         </Link>
                                     </div>
                                 </form>

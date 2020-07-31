@@ -12,9 +12,10 @@ export default class JobListing extends React.Component {
         this.$datatable = null
 
         this.initialState = {
-            area : '',
+            area : props.location || '',
+            areaName : props.areaName || '',
             city : '',
-            employment_type : '',
+            employment_type : props.type || '',
             min_exp_year : '',
             min_lang_skill : '',
             posted_within : '',
@@ -22,12 +23,92 @@ export default class JobListing extends React.Component {
             max_salary : '',
             regenerated_jobs : props.jobs || [],
             showCities : false,
-            cities : []
+            cities : props.dyanmic_cities || []
         }
         this.state = this.initialState
-
-            
         }
+
+        static async getInitialProps ({req,res,query}){ 
+    
+            let jobs = []
+            let areas = []
+            let area = {}
+            let cities = []
+            let dyanmic_cities = []
+            let companies = []
+    
+
+            let querysnapshot = db.collection('job')
+            if(query.type !== ""){
+                querysnapshot = querysnapshot.where('employment_type','==',query.type)
+            }
+            if(query.location !== ""){
+                querysnapshot = querysnapshot.where('area','==',query.location)
+                //get the passed area
+                try{
+                    db.collection('area').doc(query.location).get()
+                        .then((snapshot)=>{
+                            area = snapshot.data();
+                        })
+                    }catch(error){
+                        console.log(error)
+                }
+                //get the cities existing passed area
+                try{
+                    db.collection('city').where('area_id',"==",query.location).get().
+                    then((snapshot)=>{
+                        snapshot.forEach(doc => {
+                            dyanmic_cities.push(Object.assign(
+                                {id : doc.id,
+                              data : doc.data()}
+                            ))
+                        })
+                    })
+                    
+                }catch(error){
+                    console.log(error)
+                }
+
+                }
+
+            const querySnapshotJob = await querysnapshot.get()
+            querySnapshotJob.forEach(doc => {
+              jobs.push(Object.assign(
+                  {id : doc.id,
+                data : doc.data()}
+              ))
+            })
+    
+            
+                
+
+            const querySnapshotArea = await db.collection('area').get()
+            querySnapshotArea.forEach(doc => {
+              areas.push(Object.assign(
+                  {id : doc.id,
+                data : doc.data()}
+              ))
+            })
+    
+            const querySnapshotCity = await db.collection('city').get()
+            querySnapshotCity.forEach(doc => {
+              cities.push(Object.assign(
+                  {id : doc.id,
+                data : doc.data()}
+              ))
+            })
+    
+            const querySnapshotCompanies = await db.collection('employer').get()
+            querySnapshotCompanies.forEach(doc => {
+              companies.push(Object.assign(
+                  {id : doc.id,
+                data : doc.data()}
+              ))
+            })
+    
+            return {...query, areaName : area.name, jobs, areas, cities, dyanmic_cities, companies}
+        }
+    
 
         componentDidMount() {
             this.initializeDatatable()
@@ -189,48 +270,7 @@ export default class JobListing extends React.Component {
             console.log(this.state)
         }
         
-        static async getInitialProps (){ 
-    
-        let jobs = []
-        let areas = []
-        let cities = []
-        let companies = []
-
-        const querySnapshotJob = await db.collection('job').get()
-        querySnapshotJob.forEach(doc => {
-          jobs.push(Object.assign(
-              {id : doc.id,
-            data : doc.data()}
-          ))
-        })
-
-        const querySnapshotArea = await db.collection('area').get()
-        querySnapshotArea.forEach(doc => {
-          areas.push(Object.assign(
-              {id : doc.id,
-            data : doc.data()}
-          ))
-        })
-
-        const querySnapshotCity = await db.collection('city').get()
-        querySnapshotCity.forEach(doc => {
-          cities.push(Object.assign(
-              {id : doc.id,
-            data : doc.data()}
-          ))
-        })
-
-        const querySnapshotCompanies = await db.collection('employer').get()
-        querySnapshotCompanies.forEach(doc => {
-          companies.push(Object.assign(
-              {id : doc.id,
-            data : doc.data()}
-          ))
-        })
-
-        return {jobs, areas, cities, companies}
-    }
-
+        
 
     handleChange = (event) => {
         this.setState({[event.target.name] : event.target.value})
@@ -462,7 +502,7 @@ export default class JobListing extends React.Component {
                         </div>
                         
                         <div className="single-listing">
-                            {this.state.showCities && (
+                            {(this.state.showCities || this.state.areaName !== "") && (
                                 <React.Fragment>
                                     <div className="small-section-tittle2">
                                         <h4>{this.state.area == "" ? 'Cities' : `Cities in ${this.state.areaName}`}</h4>
