@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link'
-import {db} from '../lib/db'
+import {JOB_COLLECTION,USER_COLLECTION,EMPLOYER_COLLECTION,getCollectionRecords} from '../lib/db'
 import LayoutAdmin from '../components/LayoutAdmin';
 
 
@@ -15,36 +15,10 @@ export default class Admin extends React.Component {
 
     static async getInitialProps ({ req, res, query }){ 
 
-        let users = []
-        let jobs = []
-        let employers = []
-
-        const querySnapshotUser = await db.collection('user').get()
-
-        querySnapshotUser.forEach(doc => {
-            users.push(Object.assign(
-                {id : doc.id,
-              data : doc.data()}
-            ))
-          })
-
-        const querySnapshotJob = await db.collection('job').get()
-        querySnapshotJob.forEach(doc => {
-            jobs.push(Object.assign(
-                {id : doc.id,
-              data : doc.data()}
-            ))
-          })
-
-        const querySnapshotEmployer = await db.collection('employer').get()
-        querySnapshotEmployer.forEach(doc => {
-            employers.push(Object.assign(
-                {id : doc.id,
-              data : doc.data()}
-            ))
-          })
-
-       
+        let users = await getCollectionRecords(USER_COLLECTION)
+        let jobs = await getCollectionRecords(JOB_COLLECTION)
+        let employers = await getCollectionRecords(EMPLOYER_COLLECTION)
+        
         return {
           users,
           jobs,

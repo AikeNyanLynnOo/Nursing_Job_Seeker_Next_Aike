@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link'
 import LayoutWithFooter from '../components/LayoutWithFooter';
-import {db} from "../lib/db";
+import {db, getCollectionRecords, AREA_COLLECTION, CITY_COLLECTION, EMPLOYER_COLLECTION} from "../lib/db";
 
 export default class JobListing extends React.Component {
 
@@ -31,11 +31,11 @@ export default class JobListing extends React.Component {
         static async getInitialProps ({req,res,query}){ 
     
             let jobs = []
-            let areas = []
+            let areas = await getCollectionRecords(AREA_COLLECTION)
             let area = {}
-            let cities = []
+            let cities = await getCollectionRecords(CITY_COLLECTION)
             let dyanmic_cities = []
-            let companies = []
+            let companies = await getCollectionRecords(EMPLOYER_COLLECTION)
     
 
             let querysnapshot = db.collection('job')
@@ -80,31 +80,7 @@ export default class JobListing extends React.Component {
             })
     
             
-                
-
-            const querySnapshotArea = await db.collection('area').get()
-            querySnapshotArea.forEach(doc => {
-              areas.push(Object.assign(
-                  {id : doc.id,
-                data : doc.data()}
-              ))
-            })
-    
-            const querySnapshotCity = await db.collection('city').get()
-            querySnapshotCity.forEach(doc => {
-              cities.push(Object.assign(
-                  {id : doc.id,
-                data : doc.data()}
-              ))
-            })
-    
-            const querySnapshotCompanies = await db.collection('employer').get()
-            querySnapshotCompanies.forEach(doc => {
-              companies.push(Object.assign(
-                  {id : doc.id,
-                data : doc.data()}
-              ))
-            })
+            
     
             return {...query, areaName : area.name, jobs, areas, cities, dyanmic_cities, companies}
         }

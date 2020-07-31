@@ -1,6 +1,6 @@
 import React from 'react'
 import LayoutAdmin from '../components/LayoutAdmin'
-import {db} from '../lib/db'
+import {db,JOB_COLLECTION,AREA_COLLECTION,EMPLOYER_COLLECTION,CITY_COLLECTION,getCollectionRecords} from '../lib/db'
 
 export default class EmployerAll extends React.Component {
     constructor (props) {
@@ -51,42 +51,12 @@ export default class EmployerAll extends React.Component {
     
     
     static async getInitialProps (){ 
-        let employers = []
-        let cities = []
-        let areas = []
-        let jobs = []
+        let employers =  await getCollectionRecords(EMPLOYER_COLLECTION)
+        let cities =  await getCollectionRecords(CITY_COLLECTION)
+        let areas =  await getCollectionRecords(AREA_COLLECTION)
+        let jobs =  await getCollectionRecords(JOB_COLLECTION)
 
-        const querySnapshot = await db.collection('employer').get()
-        querySnapshot.forEach(doc => {
-          employers.push(Object.assign(
-              {id : doc.id,
-            data : doc.data()}
-          ))
-        })
-
-        const querySnapshotCity = await db.collection('city').get()
-        querySnapshotCity.forEach(doc => {
-          cities.push(Object.assign(
-              {id : doc.id,
-            data : doc.data()}
-          ))
-        })
         
-        const querySnapshotArea = await db.collection('area').get()
-        querySnapshotArea.forEach(doc => {
-          areas.push(Object.assign(
-              {id : doc.id,
-            data : doc.data()}
-          ))
-        })
-
-        const querySnapshotJob = await db.collection('job').get()
-        querySnapshotJob.forEach(doc => {
-          jobs.push(Object.assign(
-              {id : doc.id,
-            data : doc.data()}
-          ))
-        })
         return {employers,cities,areas,jobs} 
     }
 

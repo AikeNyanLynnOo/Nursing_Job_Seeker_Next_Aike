@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import LayoutWithFooter from '../components/LayoutWithFooter';
-import {db} from '../lib/db'
+import {getCollectionRecords,AREA_COLLECTION} from '../lib/db'
 
 export default class Index extends React.Component {
     constructor (props){
@@ -14,11 +14,8 @@ export default class Index extends React.Component {
         this.state = this.initialState
     }
     static async getInitialProps(){
-        let areas = []
-        const querySnapshotArea = await db.collection('area').get()
-        querySnapshotArea.forEach(doc => {
-            areas.push(Object.assign({id : doc.id, data : doc.data()}))
-        })
+        let areas = await getCollectionRecords(AREA_COLLECTION)
+        
         return {areas}
     }
     handleChange = (event) => {

@@ -1,27 +1,20 @@
 import React from 'react';
 import Link from 'next/link'
-import {db} from '../lib/db'
+import {db, getCollectionRecords} from '../lib/db'
 import LayoutAdmin from '../components/LayoutAdmin';
 
 export default class UserAll extends React.Component {
     
     static async getInitialProps ({ req, res, query }){ 
     
-        let data = []
-        const querySnapshot = await db.collection('user').get()
-        querySnapshot.forEach(doc => {
-          data.push(Object.assign(
-              {id : doc.id,
-            data : doc.data()}
-          ))
-        })
-      console.log(data);
+        let users = await getCollectionRecords(USER_COLLECTION)
+        
         return {
-          data
+          users
         }
     }
     render (){
-        const users = this.props.data;
+        const users = this.props.users;
         return (
         <LayoutAdmin title="All Registered Users">
 <table id="example" className="display" style={{width : 100 + "%"}}>

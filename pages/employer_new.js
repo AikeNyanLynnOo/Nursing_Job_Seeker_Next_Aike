@@ -1,6 +1,6 @@
 import React from 'react';
 import LayoutAdmin from '../components/LayoutAdmin';
-import {db} from '../lib/db'
+import {db, getCollectionRecords, AREA_COLLECTION} from '../lib/db'
 
 export default class EmployerNew extends React.Component {
     constructor(props){
@@ -19,14 +19,8 @@ export default class EmployerNew extends React.Component {
         this.state = this.initial_state;
     }
     static async getInitialProps ({ req, res, query }){ 
-        let areas = []
-        const querySnapshotArea = await db.collection('area').get()
-        querySnapshotArea.forEach(doc => {
-            areas.push(Object.assign(
-                {id : doc.id,
-              data : doc.data()}
-            ))
-        })
+        let areas = await getCollectionRecords(AREA_COLLECTION)
+       
         return {areas}
     }
     componentDidMount(){
