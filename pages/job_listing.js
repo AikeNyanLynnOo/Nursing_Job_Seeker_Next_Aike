@@ -147,7 +147,7 @@ export default class JobListing extends React.Component {
             query = query.where('min_lang_skill','<=',parseInt(this.state.min_lang_skill))
         }
 
-            query.get()
+            query.orderBy('posted_date').get()
             .then(snaphsot => {
                 snaphsot.forEach(doc=>{
 
@@ -190,7 +190,7 @@ export default class JobListing extends React.Component {
                     
                 })
 
-                REGENERATED_IDS = [...new Set(jobs.map(job => job.id))] 
+                REGENERATED_IDS = [...new Set(jobs.reverse().map(job => job.id))] 
                 console.log(REGENERATED_IDS)
                 if(REGENERATED_IDS.length > 0){
                     REGENERATED_IDS.forEach(id => {
@@ -755,7 +755,7 @@ export default class JobListing extends React.Component {
                         <div className=" filter-attribute">
                             <div className="select-Categories">
                                 <div className="small-section-tittle2">
-                                    <h4>Maximum Japanese Skill</h4>
+                                    <h4>Max Japanese Skill</h4>
                                 </div>
                                 <select name="min_lang_skill" className="form-control" value={this.state.min_lang_skill} onChange={this.handleChange}>
                                     <option value="" >Any</option>
@@ -783,7 +783,7 @@ export default class JobListing extends React.Component {
                         <div className=" filter-attribute">
                             <aside className="left_widgets p_filter_widgets price_rangs_aside sidebar_box_shadow">
                                 <div className="small-section-tittle2">
-                                    <h4>Minimum Salary</h4>
+                                    <h4>Min Salary</h4>
                                 </div>
                                 <div className="widgets_inner">
                                     <div className="range_item">
@@ -791,7 +791,7 @@ export default class JobListing extends React.Component {
                                             <div className="price_text">
                                             </div>
                                             <div className="justify-content-center">
-                                                <input type="number" className="form-control" id="min_salary" name="min_salary" value={this.state.min_salary} onChange={this.handleChange} />
+                                                <input type="number" className="form-control" id="min_salary" name="min_salary" value={this.state.min_salary} onChange={this.handleChange} style={{width:150}}/>
                                                 
                                             </div>
                                         </div>
