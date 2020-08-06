@@ -7535,3 +7535,30 @@ input[type="file"] {
     height : 90px;
     width : 85px;
 }
+
+
+  
+  @media(max-width:992px){
+   .wrapper{
+    width:100%;
+  } 
+  }
+  .panel-heading {
+    padding: 0;
+      border:0;
+  }
+  .panel-title>a, .panel-title>a:active{
+      display:block;
+      padding:15px;
+      color:#555;
+      font-size:16px;
+      font-weight:bold;
+      text-transform:uppercase;
+      letter-spacing:1px;
+      word-spacing:3px;
+      text-decoration:none;
+  }
+  
+  .filter-attribute {
+      margin-right: 10px;
+  }
