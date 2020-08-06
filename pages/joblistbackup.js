@@ -8,6 +8,8 @@ export default class JobListing extends React.Component {
     constructor (props) {
         super(props)
         this.handleChange = this.handleChange.bind(this)
+        this.datatableRef = React.createRef();
+        this.$datatable = null
 
         this.initialState = {
             area : props.location || '',
@@ -19,16 +21,15 @@ export default class JobListing extends React.Component {
             posted_within : '',
             min_salary : '',
             max_salary : '',
-            showJobCount : false,
-            noFoundCondition : false,
             regenerated_jobs : props.jobs || [],
             showCities : false,
+            showJobCount : props.showJobCount || false,
             cities : props.dyanmic_cities || [],
             currentPage : 1,
             firstIndex : 0,
-            lastIndex : 5,
-            pages : props.pages,
-            entryPerPage : 5,
+            lastIndex : 3,
+            pages : 0,
+            entryPerPage : 3,
             forWardBtn : true,
             backWardBtn : false,
         }
@@ -38,6 +39,7 @@ export default class JobListing extends React.Component {
         static async getInitialProps ({req,res,query}){ 
     
             let jobs = []
+            let showJobCount = false
             let areas = await getCollectionRecords(AREA_COLLECTION)
             let area = {}
             let cities = await getCollectionRecords(CITY_COLLECTION)
@@ -78,18 +80,40 @@ export default class JobListing extends React.Component {
                 }
 
             }
+            if(type !== '' || location !== ''){
+                const querySnapshotJob = await querysnapshot.get()
+                querySnapshotJob.forEach(doc => {
+                  jobs.push(Object.assign(
+                      {id : doc.id,
+                    data : doc.data()}
+                  ))
+                })
+            }else{
+                const querySnapshotJob = await querysnapshot.limit(10).get()
+                querySnapshotJob.forEach(doc => {
+                  jobs.push(Object.assign(
+                      {id : doc.id,
+                    data : doc.data()}
+                  ))
+                })
+                showJobCount = true
+            }
             
-            const querySnapshotJob = await querysnapshot.get()
-            querySnapshotJob.forEach(doc => {
-              jobs.push(Object.assign(
-                  {id : doc.id,
-                data : doc.data()}
-              ))
-            })
-    
-            return {...query, pages : Math.ceil(jobs.length/5), areaName : area.name, jobs, areas, cities, dyanmic_cities, companies}
+            return {...query,showJobCount : showJobCount, areaName : area.name, jobs, areas, cities, dyanmic_cities, companies}
         }
     
+
+        componentDidMount() {
+            this.initializeDatatable()
+        }
+        
+        initializeDatatable() {
+            this.$datatable = $(this.datatableRef.current).DataTable({
+                "pagingType": "full",
+                "ordering" : false,
+                "bInfo" : false
+            });
+        }
 
         refreshTable() {
             this.$datatable.clear()
@@ -106,14 +130,7 @@ export default class JobListing extends React.Component {
 
         
         applyFilter = async () => {
-            this.setState({
-            currentPage : 1,
-            firstIndex : 0,
-            lastIndex : 5,
-            entryPerPage : 5,
-            forWardBtn : true,
-            backWardBtn : false
-            })
+            this.$datatable.clear()
             let jobs = []
             let toReturnJobs = []
             let REGENERATED_IDS = []
@@ -191,22 +208,52 @@ export default class JobListing extends React.Component {
                             .then(snapshot=>{
                                 toReturnJobs.push(Object.assign({id : id , data : snapshot.data()}))
                                 this.setState({regenerated_jobs : toReturnJobs})
-                                this.setState({noFoundCondition : false})
-                                this.setState({pages : Math.ceil(toReturnJobs.length/5)})
                             })
                         })
-                        
-                    }else {
-                        this.setState({noFoundCondition : true})
-                        this.setState({regenerated_jobs : []})
+                        //this.setState({regenerated_jobs : toReturnJobs}).bind(this)
                     }
                 })
             }catch(error){
                 console.log(error)
             }
             this.setState({showJobCount : true})
+        }
+
+        goPrevious = () => {
+            let firstIndex = 0
+            let lastIndex = 0
+            this.setState({currentPage : this.state.currentPage-1})
+            this.state.currentPage < 3 && this.setState({backWardBtn : false}) 
+            this.state.currentPage <= this.state.pages && this.setState({forWardBtn : true}) 
+                lastIndex = this.state.firstIndex-1
+                if(lastIndex==this.state.entryPerPage){
+                    firstIndex = 0
+                    this.setState({regenerated_jobs : this.state.regenerated_jobs.slice(firstIndex,lastIndex+1)})
+                }else{
+                    firstIndex =  lastIndex-this.state.entryPerPage-1
+                    this.setState({regenerated_jobs : this.state.regenerated_jobs.slice(firstIndex,lastIndex)})
+                }
+                
+            this.setState({firstIndex : firstIndex})
+            this.setState({lastIndex : lastIndex})
             
         }
+        goForward = () => {
+            this.setState({currentPage : this.state.currentPage+1})
+            this.state.currentPage == this.state.pages-1 && this.setState({forWardBtn : false}) 
+            this.state.currentPage >= 1 && this.setState({backWardBtn : true}) 
+            this.setState({currentPage : this.state.currentPage+1})
+            this.setState({firstIndex : this.state.lastIndex+1})
+            let lastIndexCheck = this.state.lastIndex+this.state.entryPerPage+2
+            this.setState({lastIndex : lastIndexCheck})
+            if(this.state.regenerated_jobs.length >= lastIndexCheck){
+                this.setState({regenerated_jobs : this.state.regenerated_jobs.slice(this.state.lastIndex++,this.state.lastIndex+this.state.entryPerPage)})
+            }else{
+                this.setState({regenerated_jobs : this.state.regenerated_jobs.slice(this.state.lastIndex++)})
+            }
+            
+        }
+
         checkDateEqual = (dateobj) => {
             const today = new Date()
             var d = new Date(1970, 0, 1);
@@ -340,32 +387,6 @@ export default class JobListing extends React.Component {
         
     }
 
-    goPrevious = () => {
-        let firstIndex = 0
-        this.setState({currentPage : this.state.currentPage-1})
-        this.state.currentPage < 3 && this.setState({backWardBtn : false}) 
-        this.state.currentPage <= this.state.pages && this.setState({forWardBtn : true}) 
-            let lastIndex = this.state.firstIndex
-            if(lastIndex==this.state.entryPerPage){
-                firstIndex = 0
-            }else{
-                firstIndex =  lastIndex-this.state.entryPerPage
-            }
-            
-        this.setState({firstIndex : firstIndex})
-        this.setState({lastIndex : lastIndex})
-        
-    }
-    goForward = () => {
-        this.setState({currentPage : this.state.currentPage+1})
-        this.state.currentPage == this.state.pages-1 && this.setState({forWardBtn : false}) 
-        this.state.currentPage >= 1 && this.setState({backWardBtn : true}) 
-        this.setState({currentPage : this.state.currentPage+1})
-        this.setState({firstIndex : this.state.lastIndex})
-        this.setState({lastIndex : this.state.lastIndex+this.state.entryPerPage})
-        
-    }
-
     getCities = (id) => {
         let cities = []
         try{
@@ -483,10 +504,6 @@ export default class JobListing extends React.Component {
 
         return (
             <LayoutWithFooter title="Job List">
-            {/* {this.state.pages && <div>{`pages is ${this.state.pages}`}</div>}
-            {this.state.currentPage && <div>{`current page is ${this.state.currentPage}`}</div>}
-            {this.state.firstIndex && <div>{`first index is ${this.state.firstIndex}`}</div>}
-            {this.state.lastIndex && <div>{`last index is ${this.state.lastIndex}`}</div>} */}
             <div className="modal fade" id="filterModal" tabindex="-1" role="dialog" aria-hidden="true">
             <div className="modal-dialog" role="document">
                 <div className="modal-content">
@@ -823,71 +840,50 @@ export default class JobListing extends React.Component {
                                             </div>
                                         </div>
                                     </div>
-
-                                    {this.state.noFoundCondition && 
                                     
-                                    <div>
-                                        No data Available
-                                    </div>
-                                    }        
-                            <ul  style={{width : 100 + "%"}}>
-                            
-                                {this.state.regenerated_jobs && this.state.regenerated_jobs.slice(this.state.firstIndex,this.state.lastIndex).map((job) => (
-                                    <li id={job.id} >
-                
-                                    <div className="single-job-items " style={{paddingBottom : 50+"px",paddingTop : 50+"px"}}>
-                                        <div className="job-items">
-                                            <div className="company-img">
-                                                <Link href={`/job_detail?id=${job.id}`}><a><img src="/assets/img/lg.png" alt="" className="img_job_list_border" /></a></Link>
-                                            </div>
-                                            <div className="job-tittle job-tittle2">
-                                                <Link href={`/job_detail?id=${job.id}`}><a>
-                                                    <h4>{job.data.title}</h4>
-                                                </a></Link>
-                                                <ul>
-                                                    <li><i className="fas fa-building "></i>{this.getCompanyName(job.data.company)}</li>
-                                                    <li><i className="fas fa-map-marker-alt "></i>{this.getLocation(job.data.city,job.data.area)}</li>
-                    
-                                                </ul>
-                                                <ul>
-                                                    <li><i className="fas fa-calendar-alt "></i>{this.getDateString(job.data.posted_date)}</li>
-                                                    <li><i className="fas fa-yen-sign "></i>{`${job.data.min_salary} ~ ${job.data.max_salary}`}</li>
-                                                    <li><i className="fas fa-clock "></i>{`${job.data.employment_type} time`}
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                        <div className="items-link items-link2 f-right ">
-                                            <a data-toggle="modal" data-target="#quickView" onClick={()=>this.quickView(job.id)} style={{cursor : "pointer"}}>Quick View</a>
-                                            <Link href={`/job_detail?id=${job.id}`}><a>View Details</a></Link>
-                                        </div>
-                                    </div>
-                                    </li>
-                                ) )
-                                }
+                <table ref={this.datatableRef} style={{width : 100 + "%"}}>
+                <thead>
+                    <tr>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {this.state.regenerated_jobs && this.state.regenerated_jobs.map((job) => (
+                        <tr id={job.id} >
+    
+                    <td className="single-job-items " style={{paddingBottom : 50+"px",paddingTop : 50+"px"}}>
+                        <div className="job-items">
+                            <div className="company-img">
+                                <Link href={`/job_detail?id=${job.id}`}><a><img src="/assets/img/lg.png" alt="" className="img_job_list_border" /></a></Link>
+                            </div>
+                            <div className="job-tittle job-tittle2">
+                                <Link href={`/job_detail?id=${job.id}`}><a>
+                                    <h4>{job.data.title}</h4>
+                                </a></Link>
+                                <ul>
+                                    <li><i className="fas fa-building "></i>{this.getCompanyName(job.data.company)}</li>
+                                    <li><i className="fas fa-map-marker-alt "></i>{this.getLocation(job.data.city,job.data.area)}</li>
+    
                                 </ul>
-                                    
-                                </div>
-
-                                <div className="pagination-area pb-115 text-center" style={{marginTop : 5+"em"}}>
-                                    <div className="container">
-                                        <div className="row">
-                                            <div className="col-xl-12">
-                                                <div className="single-wrap d-flex justify-content-center">
-                                                    <nav aria-label="Page navigation example">
-                                                        <ul className="pagination justify-content-start">
-                                                            {this.state.backWardBtn && <li onClick={this.goPrevious} className="page-item"><a className="page-link"><span className="ti-angle-left"></span></a></li>}
-                                                            {this.state.forWardBtn && this.state.regenerated_jobs.length > 5 && <li onClick={this.goForward} className="page-item"><a className="page-link"><span className="ti-angle-right"></span></a></li>}
-                                                        </ul>
-                                                    </nav>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    
+                                <ul>
+                                    <li><i className="fas fa-calendar-alt "></i>{this.getDateString(job.data.posted_date)}</li>
+                                    <li><i className="fas fa-yen-sign "></i>{`${job.data.min_salary} ~ ${job.data.max_salary}`}</li>
+                                    <li><i className="fas fa-clock "></i>{`${job.data.employment_type} time`}
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div className="items-link items-link2 f-right ">
+                            <a data-toggle="modal" data-target="#quickView" onClick={()=>this.quickView(job.id)} style={{cursor : "pointer"}}>Quick View</a>
+                            <Link href={`/job_detail?id=${job.id}`}><a>View Details</a></Link>
+                        </div>
+                    </td>
+                        </tr>
+                    ) )
+                    }
+                </tbody>
+            </table>
+                    
                                 </div>
                             </section>
                         </div>

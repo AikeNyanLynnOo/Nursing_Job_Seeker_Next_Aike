@@ -19,18 +19,17 @@ export default class JobListing extends React.Component {
             posted_within : '',
             min_salary : '',
             max_salary : '',
-            showJobCount : false,
-            noFoundCondition : false,
-            regenerated_jobs : props.jobs || [],
+            regenerated_jobs : props.jobs.slice(0,4) || [],
             showCities : false,
-            cities : props.dyanmic_cities || [],
+            noFoundCondition : false,
             currentPage : 1,
             firstIndex : 0,
-            lastIndex : 5,
-            pages : props.pages,
-            entryPerPage : 5,
+            lastIndex : 3,
+            pages : 3,
+            entryPerPage : 3,
             forWardBtn : true,
             backWardBtn : false,
+            cities : props.dyanmic_cities || []
         }
         this.state = this.initialState
         }
@@ -78,8 +77,8 @@ export default class JobListing extends React.Component {
                 }
 
             }
-            
-            const querySnapshotJob = await querysnapshot.get()
+
+            const querySnapshotJob = await querysnapshot.orderBy("posted_date").get()
             querySnapshotJob.forEach(doc => {
               jobs.push(Object.assign(
                   {id : doc.id,
@@ -87,12 +86,14 @@ export default class JobListing extends React.Component {
               ))
             })
     
-            return {...query, pages : Math.ceil(jobs.length/5), areaName : area.name, jobs, areas, cities, dyanmic_cities, companies}
+            return {...query, areaName : area.name, jobs, areas, cities, dyanmic_cities, companies}
         }
     
 
+       
+
         refreshTable() {
-            this.$datatable.clear()
+            
             const self = this;
             JobListing
             .getInitialProps()
@@ -106,14 +107,7 @@ export default class JobListing extends React.Component {
 
         
         applyFilter = async () => {
-            this.setState({
-            currentPage : 1,
-            firstIndex : 0,
-            lastIndex : 5,
-            entryPerPage : 5,
-            forWardBtn : true,
-            backWardBtn : false
-            })
+            
             let jobs = []
             let toReturnJobs = []
             let REGENERATED_IDS = []
@@ -124,17 +118,19 @@ export default class JobListing extends React.Component {
             if(this.state.employment_type !== ""){
                 query = query.where('employment_type','==',this.state.employment_type)
             }
+           
             if(this.state.area !== ""){
                 query = query.where('area','==',this.state.area)
             }
             if(this.state.city !== ""){
                 query = query.where('city','==',this.state.city)
             }
+
             if(this.state.min_salary !== ""){
                 query = query.where('min_salary','>=',parseInt(this.state.min_salary))
             }
             if(this.state.min_exp_year !== ""){
-                query = query.where('min_exp_year','==',parseInt(this.state.min_exp_year))
+                query = query.where('min_exp_year','<=',parseInt(this.state.min_exp_year))
             }
             if(this.state.min_lang_skill !== ""){
                 query = query.where('min_lang_skill','<=',parseInt(this.state.min_lang_skill))
@@ -192,7 +188,6 @@ export default class JobListing extends React.Component {
                                 toReturnJobs.push(Object.assign({id : id , data : snapshot.data()}))
                                 this.setState({regenerated_jobs : toReturnJobs})
                                 this.setState({noFoundCondition : false})
-                                this.setState({pages : Math.ceil(toReturnJobs.length/5)})
                             })
                         })
                         
@@ -204,8 +199,48 @@ export default class JobListing extends React.Component {
             }catch(error){
                 console.log(error)
             }
-            this.setState({showJobCount : true})
             
+        }
+        goPrevious = () => {
+            let firstIndex = 0
+            let lastIndex = 0
+            this.setState({currentPage : this.state.currentPage-1})
+            this.state.currentPage < 3 && this.setState({backWardBtn : false}) 
+            this.state.currentPage <= this.state.pages && this.setState({forWardBtn : true}) 
+                lastIndex = this.state.firstIndex-1
+                if(lastIndex==this.state.entryPerPage){
+                    firstIndex = 0
+                    this.setState({regenerated_jobs : this.state.regenerated_jobs.slice(firstIndex,lastIndex+1)})
+                }else{
+                    firstIndex =  lastIndex-this.state.entryPerPage-1
+                    this.setState({regenerated_jobs : this.state.regenerated_jobs.slice(firstIndex,lastIndex)})
+                }
+                
+            this.setState({firstIndex : firstIndex})
+            this.setState({lastIndex : lastIndex})
+            
+        }
+        goForward = () => {
+            this.setState({currentPage : this.state.currentPage+1})
+            this.state.currentPage == this.state.pages-1 && this.setState({forWardBtn : false}) 
+            this.state.currentPage >= 1 && this.setState({backWardBtn : true}) 
+            this.setState({currentPage : this.state.currentPage+1})
+            this.setState({firstIndex : this.state.lastIndex+1})
+            let lastIndexCheck = this.state.lastIndex+this.state.entryPerPage+2
+            this.setState({lastIndex : lastIndexCheck})
+            if(this.state.regenerated_jobs.length >= lastIndexCheck){
+                this.setState({regenerated_jobs : this.state.regenerated_jobs.slice(this.state.lastIndex++,this.state.lastIndex+this.state.entryPerPage)})
+            }else{
+                this.setState({regenerated_jobs : this.state.regenerated_jobs.slice(this.state.lastIndex++)})
+            }
+            
+        }
+        limitJobs = (event) => {
+            this.setState({entryPerPage : parseInt(event.target.value)})
+            this.setState({lastIndex : parseInt(event.target.value)})
+            this.setState({pages : Math.ceil(this.state.regenerated_jobs/parseInt(event.target.value))}) 
+            this.setState({regenerated_jobs : this.state.regenerated_jobs.slice(0,parseInt(event.target.value)+1)})
+
         }
         checkDateEqual = (dateobj) => {
             const today = new Date()
@@ -267,103 +302,50 @@ export default class JobListing extends React.Component {
     }
 
     reGenerateJobs = (event) => {
+        this.setState({
+            currentPage : 1,
+            firstIndex : 0,
+            lastIndex : 3,
+            pages : 3,
+            entryPerPage : 3,
+            forWardBtn : true,
+            backWardBtn : false
+        })
         let jobs = []
-        this.setState({[event.target.name] : event.target.value})
-        if(this.state.regenerated_jobs.length == this.props.jobs.length){
-            if(event.target.value == "old_to_new")
-            {
-                try{
-                    db.collection('job').orderBy('posted_date').get()
-                    .then(snaphsot => {
-                        snaphsot.forEach(doc=>{
-                            jobs.push(Object.assign({
-                                id : doc.id,
-                                data : doc.data()
-                            }))
-                        })
-                        this.setState({regenerated_jobs : jobs})
-                    })
-                }catch(error){
-                    console.log(error)
-                }
-            }else if(event.target.value == "new_to_old")
-            {
-               
-                try{
-                    db.collection('job').orderBy('posted_date').get()
-                    .then(snaphsot => {
-                        snaphsot.forEach(doc=>{
-                            jobs.push(Object.assign({
-                                id : doc.id,
-                                data : doc.data()
-                            }))
-                        })
-                        this.setState({regenerated_jobs : jobs.reverse()})
-                    })
-                }catch(error){
-                    console.log(error)
-                }
-            }else {
-                try{
-                    db.collection('job').get()
-                    .then(snaphsot => {
-                        snaphsot.forEach(doc=>{
-                            jobs.push(Object.assign({
-                                id : doc.id,
-                                data : doc.data()
-                            }))
-                        })
-                        this.setState({regenerated_jobs : jobs})
-                    })
-                }catch(error){
-                    console.log(error)
-                }
-            }
-        } else {
-            jobs = this.state.regenerated_jobs
-            if(event.target.value == "old_to_new"){
-                jobs.sort(function(a, b) {
-                    return a.data.posted_date - b.data.posted_date;
+        console.log(event.target.value)
+        
+        if(event.target.value == "old_to_new")
+        { try{
+            db.collection('job').orderBy('posted_date').get()
+            .then(snaphsot => {
+                snaphsot.forEach(doc=>{
+                    jobs.push(Object.assign({
+                        id : doc.id,
+                        data : doc.data()
+                    }))
                 })
-                this.setState({regenerated_jobs : jobs})
-            }else if(event.target.value == "new_to_old"){
-                jobs.sort(function(a, b) {
-                    return b.data.posted_date - a.data.posted_date;
-                })
-                this.setState({regenerated_jobs : jobs})
-            }else {
-                jobs = this.state.regenerated_jobs
-                this.setState({regenerated_jobs : jobs})
-            }
-           
+                this.setState({regenerated_jobs : jobs.slice(0,4)})
+            })
+        }catch(error){
+            console.log(error)
         }
-        
-    }
-
-    goPrevious = () => {
-        let firstIndex = 0
-        this.setState({currentPage : this.state.currentPage-1})
-        this.state.currentPage < 3 && this.setState({backWardBtn : false}) 
-        this.state.currentPage <= this.state.pages && this.setState({forWardBtn : true}) 
-            let lastIndex = this.state.firstIndex
-            if(lastIndex==this.state.entryPerPage){
-                firstIndex = 0
-            }else{
-                firstIndex =  lastIndex-this.state.entryPerPage
-            }
             
-        this.setState({firstIndex : firstIndex})
-        this.setState({lastIndex : lastIndex})
-        
-    }
-    goForward = () => {
-        this.setState({currentPage : this.state.currentPage+1})
-        this.state.currentPage == this.state.pages-1 && this.setState({forWardBtn : false}) 
-        this.state.currentPage >= 1 && this.setState({backWardBtn : true}) 
-        this.setState({currentPage : this.state.currentPage+1})
-        this.setState({firstIndex : this.state.lastIndex})
-        this.setState({lastIndex : this.state.lastIndex+this.state.entryPerPage})
-        
+        }else if(event.target.value == "new_to_old"){
+            try{
+                db.collection('job').orderBy('posted_date').get()
+                .then(snaphsot => {
+                    snaphsot.forEach(doc=>{
+                        jobs.push(Object.assign({
+                            id : doc.id,
+                            data : doc.data()
+                        }))
+                    })
+                    this.setState({regenerated_jobs : jobs.reverse().slice(0,4)})
+                })
+            }catch(error){
+                console.log(error)
+            }   
+        }
     }
 
     getCities = (id) => {
@@ -478,15 +460,15 @@ export default class JobListing extends React.Component {
 
     render (){
         const areas = this.props.areas
+        console.log(areas)
         const cities = this.state.cities
         const viewCities = this.props.cities
 
         return (
             <LayoutWithFooter title="Job List">
-            {/* {this.state.pages && <div>{`pages is ${this.state.pages}`}</div>}
             {this.state.currentPage && <div>{`current page is ${this.state.currentPage}`}</div>}
             {this.state.firstIndex && <div>{`first index is ${this.state.firstIndex}`}</div>}
-            {this.state.lastIndex && <div>{`last index is ${this.state.lastIndex}`}</div>} */}
+            {this.state.lastIndex && <div>{`last index is ${this.state.lastIndex}`}</div>}
             <div className="modal fade" id="filterModal" tabindex="-1" role="dialog" aria-hidden="true">
             <div className="modal-dialog" role="document">
                 <div className="modal-content">
@@ -810,7 +792,7 @@ export default class JobListing extends React.Component {
                                             <a onClick={this.filterShow} className="filter_btn"><img style={{width : 1+"em",height : 1+"em", marginRight : 1+"em"}} src="/assets/img/logo/filter.png"></img>Filter jobs</a>
                                                
                                                 
-                                                <h5>{ this.state.regenerated_jobs.length > 0 && this.state.showJobCount && `${this.state.regenerated_jobs.length} - Jobs Found`}</h5>
+                                                <h5>{ this.state.regenerated_jobs.length > 0 && `${this.state.regenerated_jobs.length} - Jobs Found` || `No Jobs Found !`}</h5>
                                                 
                                                 <div className="select-job-items">
                                                     <span>Sort by</span>
@@ -823,72 +805,55 @@ export default class JobListing extends React.Component {
                                             </div>
                                         </div>
                                     </div>
-
+                                    
                                     {this.state.noFoundCondition && 
                                     
                                     <div>
                                         No data Available
                                     </div>
-                                    }        
-                            <ul  style={{width : 100 + "%"}}>
-                            
-                                {this.state.regenerated_jobs && this.state.regenerated_jobs.slice(this.state.firstIndex,this.state.lastIndex).map((job) => (
-                                    <li id={job.id} >
-                
-                                    <div className="single-job-items " style={{paddingBottom : 50+"px",paddingTop : 50+"px"}}>
-                                        <div className="job-items">
-                                            <div className="company-img">
-                                                <Link href={`/job_detail?id=${job.id}`}><a><img src="/assets/img/lg.png" alt="" className="img_job_list_border" /></a></Link>
+                                    }
+                                    <ul>
+                                    {this.state.regenerated_jobs && this.state.regenerated_jobs.map((job) => (
+                                        <li id={job.id} >
+    
+                                        <div className="single-job-items " style={{paddingBottom : 50+"px",paddingTop : 50+"px"}}>
+                                            <div className="job-items">
+                                                <div className="company-img">
+                                                    <Link href={`/job_detail?id=${job.id}`}><a><img src="/assets/img/lg.png" alt="" className="img_job_list_border" /></a></Link>
+                                                </div>
+                                                <div className="job-tittle job-tittle2">
+                                                    <Link href={`/job_detail?id=${job.id}`}><a>
+                                                        <h4>{job.data.title}</h4>
+                                                    </a></Link>
+                                                    <ul>
+                                                        <li><i className="fas fa-building "></i>{this.getCompanyName(job.data.company)}</li>
+                                                        <li><i className="fas fa-map-marker-alt "></i>{this.getLocation(job.data.city,job.data.area)}</li>
+                        
+                                                    </ul>
+                                                    <ul>
+                                                        <li><i className="fas fa-calendar-alt "></i>{this.getDateString(job.data.posted_date)}</li>
+                                                        <li><i className="fas fa-yen-sign "></i>{`${job.data.min_salary} ~ ${job.data.max_salary}`}</li>
+                                                        <li><i className="fas fa-clock "></i>{`${job.data.employment_type} time`}
+                                                        </li>
+                                                    </ul>
+                                                    
+                                                </div>
                                             </div>
-                                            <div className="job-tittle job-tittle2">
-                                                <Link href={`/job_detail?id=${job.id}`}><a>
-                                                    <h4>{job.data.title}</h4>
-                                                </a></Link>
-                                                <ul>
-                                                    <li><i className="fas fa-building "></i>{this.getCompanyName(job.data.company)}</li>
-                                                    <li><i className="fas fa-map-marker-alt "></i>{this.getLocation(job.data.city,job.data.area)}</li>
-                    
-                                                </ul>
-                                                <ul>
-                                                    <li><i className="fas fa-calendar-alt "></i>{this.getDateString(job.data.posted_date)}</li>
-                                                    <li><i className="fas fa-yen-sign "></i>{`${job.data.min_salary} ~ ${job.data.max_salary}`}</li>
-                                                    <li><i className="fas fa-clock "></i>{`${job.data.employment_type} time`}
-                                                    </li>
-                                                </ul>
+                                            <div className="items-link items-link2 f-right ">
+                                                <a data-toggle="modal" data-target="#quickView" onClick={()=>this.quickView(job.id)} style={{cursor : "pointer"}}>Quick View</a>
+                                                <Link href={`/job_detail?id=${job.id}`}><a>View Details</a></Link>
                                             </div>
                                         </div>
-                                        <div className="items-link items-link2 f-right ">
-                                            <a data-toggle="modal" data-target="#quickView" onClick={()=>this.quickView(job.id)} style={{cursor : "pointer"}}>Quick View</a>
-                                            <Link href={`/job_detail?id=${job.id}`}><a>View Details</a></Link>
-                                        </div>
-                                    </div>
                                     </li>
                                 ) )
                                 }
                                 </ul>
-                                    
                                 </div>
-
-                                <div className="pagination-area pb-115 text-center" style={{marginTop : 5+"em"}}>
-                                    <div className="container">
-                                        <div className="row">
-                                            <div className="col-xl-12">
-                                                <div className="single-wrap d-flex justify-content-center">
-                                                    <nav aria-label="Page navigation example">
-                                                        <ul className="pagination justify-content-start">
-                                                            {this.state.backWardBtn && <li onClick={this.goPrevious} className="page-item"><a className="page-link"><span className="ti-angle-left"></span></a></li>}
-                                                            {this.state.forWardBtn && this.state.regenerated_jobs.length > 5 && <li onClick={this.goForward} className="page-item"><a className="page-link"><span className="ti-angle-right"></span></a></li>}
-                                                        </ul>
-                                                    </nav>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
                                 <div>
-                                    
+                                    {this.state.backWardBtn && <button onClick={this.goPrevious}>Previous</button>}
+                                    {this.state.forWardBtn && <button onClick={this.goForward}>Next</button>}
                                 </div>
+                                    
                             </section>
                         </div>
                     </div>

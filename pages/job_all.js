@@ -108,7 +108,6 @@ export default class JobAll extends React.Component {
         try{
             db.collection('job').doc(this.state.delete_id).delete()
             this.setState({updateOrDelete : "Deleted"})
-            this.showSuccessfulDialog()
             this.refreshTable()
         }catch(error) {
             console.log(error)
