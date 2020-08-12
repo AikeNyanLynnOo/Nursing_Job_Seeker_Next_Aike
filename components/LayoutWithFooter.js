@@ -1,11 +1,11 @@
 import Link from 'next/link';
 import Head from 'next/head';
+import {getCollectionRecords,JOB_COLLECTION,EMPLOYER_COLLECTION} from "../lib/db";
 class LayoutWithFooter extends React.Component {
 
     state = {
         isAuthenticated : true
     }
-
     componentDidMount () {
         document.getElementById("dateOutput").innerHTML=new Date().getFullYear();
         const script = document.createElement("script");
@@ -202,13 +202,13 @@ class LayoutWithFooter extends React.Component {
                 </div>
                 <div className="col-xl-3 col-lg-3 col-md-4 col-sm-5">
                     <div className="footer-tittle-bottom">
-                        <span>5000+</span>
+                        <span>{this.props.count.jobCount}</span>
                         <p>Active Jobs</p>
                     </div>
                 </div>
                 <div className="col-xl-3 col-lg-3 col-md-4 col-sm-5">
                     <div className="footer-tittle-bottom">
-                        <span>451</span>
+                        <span>{this.props.count.empCount}</span>
                         <p>Companies</p>
                     </div>
                 </div>

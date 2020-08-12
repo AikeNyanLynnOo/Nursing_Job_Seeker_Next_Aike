@@ -498,6 +498,13 @@ export default class JobListing extends React.Component {
         }
         return returnString 
     }
+    getJobCount = (id) => {
+        let count = 0
+        this.props.jobs.map(job => {
+            (job.data.city == id || job.data.area == id) && count++ 
+        })
+        return count
+    }
 
     render (){
     const areas = this.props.areas
@@ -505,7 +512,7 @@ export default class JobListing extends React.Component {
     const viewCities = this.props.cities
 
     return (
-        <LayoutWithFooter title="Job List">
+        <LayoutWithFooter title="Job List" count={{empCount : this.props.companies.length, jobCount : this.props.jobs.length}}>
         {/* {this.state.pages && <div>{`pages is ${this.state.pages}`}</div>}
         {this.state.currentPage && <div>{`current page is ${this.state.currentPage}`}</div>}
         {this.state.firstIndex && <div>{`first index is ${this.state.firstIndex}`}</div>}
@@ -655,7 +662,7 @@ export default class JobListing extends React.Component {
                                 <select name="area" className="form-control" value={this.state.area} onChange={this.handleChange}>
                                     <option value="">Any</option>
                                     {areas && areas.map(area => 
-                                        (<option value={area.id}>{area.data.name}</option>)
+                                        (<option value={area.id}>{`${area.data.name} - ${this.getJobCount(area.id)} jobs`}</option>)
                                     )}
                                 </select>
                             </div>
@@ -671,7 +678,7 @@ export default class JobListing extends React.Component {
                                         <select name="city" className="form-control" value={this.state.city} onChange={this.handleChange}>
                                         <option value="">Any</option>
                                         {cities && cities.map(city => 
-                                                (<option value={city.id}>{city.data.name}</option>)
+                                                (<option value={city.id}>{`${city.data.name} - ${this.getJobCount(city.id)} jobs`}</option>)
                                             )}
                                         </select>
                                     </div>
@@ -814,9 +821,13 @@ export default class JobListing extends React.Component {
                                         <Link href={`/job_detail?id=${job.id}`}><a><img src="/assets/img/lg.png" alt="" className="img_job_list_border" /></a></Link>
                                     </div>
                                     <div className="job-tittle job-tittle2">
+                                        <div className="row">
                                         <Link href={`/job_detail?id=${job.id}`}><a>
                                             <h4>{job.data.title}</h4>
                                         </a></Link>
+                                        {this.checkDateEqual(job.data.posted_date) && <i className="newlyAddedJob">New</i>}
+                                        </div>
+                                        
                                         <ul>
                                             <li><i className="fas fa-building "></i>{this.getCompanyName(job.data.company)}</li>
                                             <li><i className="fas fa-map-marker-alt "></i>{this.getLocation(job.data.city,job.data.area)}</li>

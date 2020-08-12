@@ -7583,3 +7583,10 @@ input[type="file"] {
       margin-left : 1em;
       margin-right : 1em;
   }
+  .newlyAddedJob {
+    color : #000000;
+    margin-left : 1em;
+    padding :  5px 10px;
+    background : #52c8fa;
+    border-radius : 5px
+  }
