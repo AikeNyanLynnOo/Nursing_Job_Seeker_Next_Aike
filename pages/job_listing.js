@@ -139,15 +139,17 @@ export default class JobListing extends React.Component {
         }
         if(this.state.min_salary !== ""){
             query = query.where('min_salary','>=',parseInt(this.state.min_salary))
+            query = query.orderBy("min_salary")
         }
         if(this.state.min_exp_year !== ""){
             query = query.where('min_exp_year','==',parseInt(this.state.min_exp_year))
         }
         if(this.state.min_lang_skill !== ""){
             query = query.where('min_lang_skill','<=',parseInt(this.state.min_lang_skill))
+            query = query.orderBy("min_lang_skill")
         }
 
-            query.orderBy('posted_date').get()
+            query.orderBy("posted_date").get()
             .then(snaphsot => {
                 snaphsot.forEach(doc=>{
 
@@ -427,6 +429,21 @@ export default class JobListing extends React.Component {
     }
     }
 
+    getValue = (id) => {
+        let value = ""
+        this.props.areas.map(area => {
+            if(area.id == id){
+                value = area.data.name
+            }
+        })
+        this.props.cities.map(city => {
+            if(city.id == id){
+                value = city.data.name
+            }
+        })
+        return value
+    }
+
     getDateString = (obj) => {
     var t = new Date(1970, 0, 1);
     t.setSeconds(obj.seconds);
@@ -474,6 +491,36 @@ export default class JobListing extends React.Component {
 
     }
 
+    getExpYear = (expID) => {
+        let returnString = ""
+        switch(expID){
+            case 1 : returnString = "Less Than 1 Year" 
+                     break
+            case 2 : returnString = "1-2 Years"
+                     break
+            case 3 : returnString = "2-3 Years"
+                     break
+            case 4 : returnString = "3-6 Years"
+                     break
+            case 5 : returnString = "6 Years and more"
+        }
+        return returnString 
+    }
+
+    getPostedWithin = (dateID) => {
+        let returnString = ""
+        switch(dateID){
+            case 1 : returnString = "Today" 
+                     break
+            case 2 : returnString = "Last 3 Days"
+                     break
+            case 3 : returnString = "Last 7 Days"
+                     break
+            case 4 : returnString = "This Month"
+        }
+        return returnString 
+    }
+
     render (){
     const areas = this.props.areas
     const cities = this.state.cities
@@ -491,172 +538,102 @@ export default class JobListing extends React.Component {
         <div className="modal-dialog modal-lg">
             <div className="modal-content">
             <div className="modal-header">
-                <h5 className="modal-title" id="exampleModalLabel">Quick View</h5>
+                <h5 className="modal-title" id="exampleModalLabel">{this.getCompanyName(this.state.view_company)}</h5>
                 <button type="button" className="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div className="modal-body">
 
-            <form className="register_form">
-                <div className="form-group">
-                <label for="title">Job Title</label>
-                    <div className="input-group-icon mt-10">
-                        <div className="icon "><i className="fa fa-briefcase" aria-hidden="true "></i></div>
-                        <input type="text" value={this.state.view_title} disabled className="single-input"/>
-                    </div>
-                </div>
+            <div className="container">
+                <div className="row">
 
-                <div className="container to_up">
-                    
-                    <div className="row">
-                    <div className="form-group two_col_input_left">
-                    <label for="min_salary">Minimum Salary</label>
-                    <div className="input-group-icon mt-10 ">
-                            <div className="icon "><i className="fa fa-yen-sign" aria-hidden="true "></i></div>
-                            <input id="min_salary" type="number" value={this.state.view_min_salary} disabled className="single-input"/>
+                <div className="label col-2">Job Title</div>
+                <div className="value">{this.state.view_title}</div>
+                </div>
+                <hr/>
+                <div className="row">
+                <div className="label col-2">Minimum Salary</div>
+                <div className="value">{this.state.view_min_salary}</div>
+                </div>
+                <hr/>
+                <div className="row">
+                <div className="label col-2">Maximum Salary</div>
+                <div className="value">{this.state.view_max_salary}</div>
+                </div>
+                <hr/>
+                <div className="row">
+                <div className="label col-2">Employment Type</div>
+                <div className="value">{`${this.state.view_employment_type} Time`}</div>
+                </div>
+                <hr/>
+                <div className="row">
+                <div className="label col-2">Vacancy</div>
+                <div className="value">{`${this.state.view_vacancy}`}</div>
+                </div>
+                <hr/>
+                <div className="row">
+                <div className="label col-2">Minimum Required Age</div>
+                <div className="value">{`${this.state.view_min_age} Years Old`}</div>
+                </div>
+                <hr/>
+                <div className="row">
+                <div className="label col-2">Working Days</div>
+                <div className="value">{`${this.state.view_work_day}`}</div>
+                </div>
+                <hr/>
+                <div className="row">
+                <div className="label col-2">Working Hours</div>
+                <div className="value">{`${this.state.view_work_hour}`}</div>
+                </div>
+                <hr/>
+                <div className="row">
+                <div className="label col-2">Minimum Japanese Language Skill</div>
+                <div className="value">{`N${this.state.view_min_lang_skill}`}</div>
+                </div>
+                <hr/>
+                <div className="row">
+                <div className="label col-2">Minimum Experience Years</div>
+                <div className="value">{this.getExpYear(this.state.view_min_exp_year)}</div>
+                </div>
+                <hr/>
+                <div className="row">
+                <div className="label col-2">Area</div>
+                <div className="value">{this.getValue(this.state.view_area)}</div>
+                </div>
+                <hr/>
+                <div className="row">
+                <div className="label col-2">City</div>
+                <div className="value">{this.getValue(this.state.view_city)}</div>
+                </div>
+                <hr/>
+                <div className="row">
+                <div className="label col-2">Job Address</div>
+                <div className="value">{this.state.view_job_address}</div>
+                </div> 
+                <hr/>
+                <div className="row">
+                <div className="label col-2">Job Description</div>
+                <div className="value">{this.state.view_description}</div>
+                </div> 
+                <hr/>
+                <div className="row">
+                <div className="label col-2">Job Requirements</div>
+                <div className="value">{this.state.view_requirement}</div>
+                </div> 
+                <hr/>
+                <div className="row">
+                <div className="label col-2">Other Qualifications (Better if you have)</div>
+                <div className="value">{this.state.view_other_qualification}</div>
+                </div> 
+                <hr/>   
+                <div className="row">
+                <div className="label col-2">Other Message</div>
+                <div className="value">{this.state.view_other_message}</div>
+                </div> 
+                
 
-                        </div>
-                    </div>
-                    <div className="form-group two_col_input">
-                    <label for="max_salary">Maximum Salary</label>
-                    <div className="input-group-icon mt-10 ">
-                            <div className="icon "><i className="fa fa-yen-sign" aria-hidden="true "></i></div>
-                            <input id="max_salary" type="number" value={this.state.view_max_salary} disabled className="single-input"/>
-                        </div>
-                    </div>
-                    </div> 
-                </div>
-
-                <div className="form-group to_up">
-                <label for="employment_type">Employment Type</label>
-                <div className="input-group-icon mt-10 ">
-                <div className="icon "><i className="fas fa-list " aria-hidden="true "></i></div>
-                <select className="form-control single-input select_border" disabled>
-                    
-                        <option selected={this.state.view_employment_type == "Full" ? ("selected") : ("false")} disabled>Full Time</option>
-                        <option selected={this.state.view_employment_type == "Part" ? ("selected") : ("false")} disabled>Part Time</option>   
-                </select>
-                </div>
-                </div>
-
-                <div className="form-group to_up">
-                <label for="min_age">Vacancy</label>
-                <div className="input-group-icon mt-10">
-                    <div className="icon "><i className="fa fa-briefcase" aria-hidden="true "></i></div>
-                    <input type="number"  value={this.state.view_vacancy} disabled className="single-input"/>
-                </div>
-                </div>
-
-                <div className="form-group to_up">
-                <label for="min_age">Minimum Required Age</label>
-                <div className="input-group-icon mt-10">
-                    <div className="icon "><i className="fa fa-child" aria-hidden="true "></i></div>
-                    <input type="number"  value={this.state.view_min_age} disabled className="single-input"/>
-                </div>
-                </div>
-                <div className="form-group to_up">
-                <label for="work_day">Work Days</label>
-                <div className="input-group-icon mt-10">
-                    <div className="icon "><i className="fa fa-calendar-alt " aria-hidden="true "></i></div>
-                    <textarea  cols="30" rows="4"  value={this.state.view_work_day} className="single-input" disabled></textarea>
-                </div>
-                </div>
-                <div className="form-group to_up">
-                <label for="work_hour">Work Hours</label>
-                <div className="input-group-icon mt-10">
-                    <div className="icon "><i className="fa fa-clock " aria-hidden="true "></i></div>
-                    <textarea cols="30" rows="4" value={this.state.view_work_hour} className="single-input" disabled></textarea>
-                </div>
-                </div>
-                <div className="form-group to_up">
-                <label for="min_lang_skill">Minimum Japanese Language Skill</label>
-                <div className="input-group-icon mt-10 ">
-                <div className="icon "><i className="fas fa-language " aria-hidden="true "></i></div>
-                <select className="form-control single-input select_border" disabled>
-                        <option selected={this.state.view_min_lang_skill == 3 ? ("selected") : ("false")} disabled>N3</option>
-                        <option selected={this.state.view_min_lang_skill == 2 ? ("selected") : ("false")} disabled>N2</option>
-                        <option selected={this.state.view_min_lang_skill == 1 ? ("selected") : ("false")} disabled>N1</option>  
-                </select>
-                </div>
-                </div>
-                <div className="form-group to_up">
-                <label for="min_exp_year">Minimum Experience Years</label>
-                <div className="input-group-icon mt-10 ">
-                <div className="icon "><i className="fas fa-calendar-check " aria-hidden="true "></i></div>
-                <select className="form-control single-input select_border" disabled>
-                        <option selected={this.state.view_min_exp_year == 1 ? ("selected") : ("false")} disabled>Less Than 1 Year</option>
-                        <option selected={this.state.view_min_exp_year == 2 ? ("selected") : ("false")} disabled>1-2 Years</option>
-                        <option selected={this.state.view_min_exp_year == 3 ? ("selected") : ("false")} disabled>2-3 Years</option>
-                        <option selected={this.state.view_min_exp_year == 4 ? ("selected") : ("false")} disabled>3-6 Years</option>
-                        <option selected={this.state.view_min_exp_year == 5 ? ("selected") : ("false")} disabled>6 Years and more</option> 
-                </select>
-                </div>
-                </div>
-                <div className="form-group to_up">
-                <label for="area">Area</label>
-                <div className="input-group-icon mt-10 ">
-                    <div className="icon "><i className="fas fa-map-marker-alt " aria-hidden="true "></i></div>
-                        <select className="form-control single-input select_border" disabled>
-                            
-                            {areas && areas.map(area => (
-                            this.state.view_area == area.id ? <option selected disabled>{area.data.name}</option> : <option value={area.id}>{area.data.name}</option>
-                            ))}
-                        </select>
-                </div>
-                </div>
-                <div className="form-group to_up">
-                <label for="city">City</label>
-                <div className="input-group-icon mt-10 ">
-                    <div className="icon "><i className="fas fa-map-marker-alt " aria-hidden="true "></i></div>
-                    <select className="form-control single-input select_border" disabled>
-                    {
-                    viewCities && viewCities.map(city => (
-                        this.state.view_city == city.id ? <option selected disabled>{city.data.name}</option> : <option value={city.id}>{city.data.name}</option>
-                    ))
-                    }
-                </select>
-                </div>
-                </div>
-
-                <div className="form-group to_up">
-                <label for="job_address">Job Address</label>
-                <div className="input-group-icon mt-10">
-                    <div className="icon "><i className="fa fa-home " aria-hidden="true "></i></div>
-                    <textarea cols="30" rows="4"  value={this.state.view_job_address} className="single-input" disabled></textarea>
-                </div>
-                </div>    
-
-                <div className="form-group to_up">
-                <label for="description">Description</label>
-                <div className="input-group-icon mt-10">
-                    <div className="icon "><i className="fa fa-tasks " aria-hidden="true "></i></div>
-                    <textarea cols="30" rows="4"  value={this.state.view_description} className="single-input" disabled></textarea>
-                </div>
-                </div>
-                <div className="form-group to_up">
-                <label for="requirement">Requirements</label>
-                <div className="input-group-icon mt-10">
-                    <div className="icon "><i className="fa fa-tasks " aria-hidden="true "></i></div>
-                    <textarea cols="30" rows="4"  value={this.state.view_requirement} className="single-input" disabled></textarea>
-                </div>
-                </div>
-                <div className="form-group to_up">
-                <label for="other_qualification">Other Qualifications</label>
-                <div className="input-group-icon mt-10">
-                    <div className="icon "><i className="fa fa-tasks " aria-hidden="true "></i></div>
-                    <textarea cols="30" rows="4"  value={this.state.view_other_qualification} className="single-input" disabled></textarea>
-                </div>
-                </div>
-                <div className="form-group to_up">
-                <label for="other_message">Other Message</label>
-                <div className="input-group-icon mt-10">
-                    <div className="icon "><i className="fa fa-comments " aria-hidden="true "></i></div>
-                    <textarea cols="30" rows="4"  value={this.state.view_other_message} className="single-input" disabled></textarea>
-                </div>
-                </div>
-
-            </form>
+            </div>
             </div>
         </div>
         </div>
@@ -679,7 +656,7 @@ export default class JobListing extends React.Component {
                 <div className="panel-heading active" role="tab" id="headingOne">
                 <h4 className="panel-title">
                     <a role="button" onClick={this.changeIcon} data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne" style={{backgroundColor : "#52c8fa"}}>
-                    Filter Jobs
+                    Filter Jobs  {this.state.area && ` - ${this.getValue(this.state.area)}`}{this.state.city && ` - ${this.getValue(this.state.city)}`}{this.state.employment_type && `- ${this.state.employment_type} Time`}{this.state.min_exp_year && ` - ${this.getExpYear(parseInt(this.state.min_exp_year))}`}{this.state.min_lang_skill && ` - N${this.state.min_lang_skill}`}{this.state.posted_within && ` - ${this.getPostedWithin(parseInt(this.state.posted_within))}`}{this.state.min_salary && ` - ¥ ${this.state.min_salary}`}
                         <i className={`fas fa-${this.state.icon}`} style={{float : "right"}}></i>
                     </a>
                 </h4>
@@ -801,7 +778,7 @@ export default class JobListing extends React.Component {
                         </div>
                     </div>
                 </div>
-                <div className="row pt-30">
+                <div className="row pt-30 content-align-center">
                     <button type="button" className="btn-danger" onClick={this.resetFilter} aria-label="Cancel">Reset Filter</button>  
                     <button type="button" className="btn-primary" data-dismiss="modal" onClick={this.applyFilter}>Apply Filter</button>
                 </div>
@@ -910,8 +887,6 @@ export default class JobListing extends React.Component {
     </div>
 </div>
 </LayoutWithFooter>
-            
-        
         )
     }
 }

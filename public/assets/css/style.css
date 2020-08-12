@@ -7562,3 +7562,24 @@ input[type="file"] {
   .filter-attribute {
       margin-right: 10px;
   }
+
+  .content-align-center{
+    width : 20%;
+    margin-left : 40%;
+    margin-right : 40%;
+  }
+
+  .content-align-center button {
+      margin : 1px;
+  }
+
+  .label {
+      margin-right : 1em;
+      
+  }
+  .value {
+      color : #52c8fa;
+      font-weight: bold;
+      margin-left : 1em;
+      margin-right : 1em;
+  }
