@@ -84,7 +84,6 @@ export default class JobListing extends React.Component {
             }catch(error){
                 console.log(error)
             }
-
         }
         
         const querySnapshotJob = await querysnapshot.orderBy('posted_date').get()

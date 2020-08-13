@@ -6,7 +6,7 @@ export default class EmployerAll extends React.Component {
     constructor (props) {
         super(props)
         this.handleChange = this.handleChange.bind(this)
-        this.datatableRef = React.createRef();
+        this.datatableRef = React.createRef()
         this.$datatable = null
 
         this.state = {
@@ -24,6 +24,7 @@ export default class EmployerAll extends React.Component {
           cities : props.cities,
           employers : props.employers,
           jobs : props.jobs,
+          generated_jobs : props.generated_jobs || [],
           
           //add job fields
           title : '',
@@ -56,8 +57,9 @@ export default class EmployerAll extends React.Component {
         let areas =  await getCollectionRecords(AREA_COLLECTION)
         let jobs =  await getCollectionRecords(JOB_COLLECTION)
 
+        let generated_jobs = await getCollectionRecords(JOB_COLLECTION,1)
         
-        return {employers,cities,areas,jobs} 
+        return {employers,cities,areas,jobs,generated_jobs} 
     }
 
     componentDidMount() {
@@ -79,7 +81,10 @@ export default class EmployerAll extends React.Component {
           { "orderable": false }
         ],
           order: [[1, "desc"]],
+          "bInfo": false 
       });
+
+     
   }
 
     refreshTable() {
@@ -104,6 +109,16 @@ export default class EmployerAll extends React.Component {
           }
         })
         return count
+    }
+    seeJobs = (id,name) => {
+      
+        this.setState({eName : name})
+        let jobs = []
+        this.props.jobs.map(job => {
+          job.data.company == id && jobs.push(Object.assign({id : job.id,data : job.data}))
+        })
+        this.setState({generated_jobs : jobs})
+        
     }
 
     handleChange = (event) => {
@@ -328,6 +343,15 @@ export default class EmployerAll extends React.Component {
       })
      return city_name + "," + area_name
    }
+
+   getDateString = (obj) => {
+    console.log(obj.seconds)
+    var t = new Date(1970, 0, 1);
+    t.setSeconds(obj.seconds);
+    console.log(t)
+    console.log(t.getDate()+1+'/'+(t.getMonth()+1)+'/'+t.getFullYear()+' '+ t.getHours()+':'+ t.getMinutes()+':'+ t.getSeconds()+'-'+t.getTimezoneOffset())
+    return t.getDate()+'/'+(t.getMonth()+1)+'/'+t.getFullYear()
+}
 
     render (){
         const dynamic_cities = this.state.cities
@@ -572,6 +596,51 @@ export default class EmployerAll extends React.Component {
   </div>
 </div>
 
+<div className="modal fade" id="seeJobsModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div className="modal-dialog modal-lg" role="document">
+    <div className="modal-content">
+      <div className="modal-header">
+        <h5 className="modal-title" id="exampleModalLabel">{this.state.eName && this.state.eName}</h5>
+        <button type="button" className="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div className="modal-body">
+
+      <table className="display" style={{width : 100 + "%"}}>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Employment Type</th>
+                    <th>Salary <i className="fa fa-yen-sign"></i></th>
+                    <th>Work Location</th>
+                    <th>Posted Date</th> 
+                </tr>
+            </thead>
+            <tbody>
+                {this.state.generated_jobs && this.state.generated_jobs.map((job) => (
+                    <tr id={job.id}>
+
+                        <td>{job.data.title}</td>
+                        <td>{job.data.employment_type}</td>
+                        <td>{`${job.data.min_salary} ~ ${job.data.max_salary}`}</td>
+                        <td>{this.getLocation(job.data.city,job.data.area)}</td>
+                        <td>{this.getDateString(job.data.posted_date)}</td>
+                        
+                    </tr>
+                ) )
+                
+                }
+                
+                
+            </tbody>
+        </table>
+      </div>
+      
+    </div>
+  </div>
+</div>
+
             <table ref={this.datatableRef} className="display" style={{width : 100 + "%"}}>
                         <thead>
                             <tr>
@@ -594,7 +663,7 @@ export default class EmployerAll extends React.Component {
                                 <td>{employer.data.email}</td>
                                 <td>{employer.data.phone}</td>
                                 <td>{this.getLocation(employer.data.city,employer.data.area)}</td>
-                                <td>{this.getJobCount(employer.id)}</td>
+                                <td>{this.getJobCount(employer.id)}<i data-toggle="modal" data-target="#seeJobsModal" className="fa fa-eye" style={{marginLeft : 1+"em",cursor : "pointer"}} onClick={()=>this.seeJobs(employer.id,employer.data.name)}></i></td>
                                 <td className="btn_center">
                                     <a onClick={()=>this.getPassIdAddJob(employer.id)} className="edit_btn table_btn"><i className="fa fa-plus" style={{marginBottom : 0.5+"em"}}></i>Add_Job</a>
                                 </td>
@@ -610,12 +679,6 @@ export default class EmployerAll extends React.Component {
                         </tbody>
                     </table>
         </LayoutAdmin>
-        
-        
         )
     }
 }
-
-
-
-

@@ -1,5 +1,4 @@
-import React from 'react';
-import Link from 'next/link'
+import React from 'react'
 import LayoutAdmin from '../components/LayoutAdmin';
 import {db, getCollectionRecords, JOB_COLLECTION, AREA_COLLECTION, CITY_COLLECTION, EMPLOYER_COLLECTION} from "../lib/db";
 
@@ -61,6 +60,7 @@ export default class JobAll extends React.Component {
                     { "orderable": false }
                   ],
                 order: [[1, "desc"]],
+                "bInfo": false
             });
         }
 
@@ -114,7 +114,6 @@ export default class JobAll extends React.Component {
         }
     }
 
-    
     getPassIdEdit = (id) => {
 
         this.setState ({edit_id : id})
