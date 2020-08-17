@@ -103,7 +103,7 @@ export default class JobDetail extends React.Component {
         const job = this.props.job
         return (
             
-        <LayoutWithFooter title = {job.title}>
+        <LayoutWithFooter title = {job.title} count={{empCount : this.props.companies.length, jobCount : this.props.jobs.length}}>
             
         <div className="job-post-company pt-120 pb-120">
             <div className="container">
