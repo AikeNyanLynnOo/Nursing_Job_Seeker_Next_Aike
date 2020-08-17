@@ -2,6 +2,7 @@ import React from 'react'
 import Link from 'next/link'
 import {db} from '../lib/db'
 import LayoutWithFooter from '../components/LayoutWithFooter';
+import {getCollectionRecords,AREA_COLLECTION,EMPLOYER_COLLECTION,JOB_COLLECTION} from '../lib/db'
 
 export default class UserRegister extends React.Component {
     constructor(props){
@@ -31,7 +32,12 @@ export default class UserRegister extends React.Component {
         document.body.appendChild(script);
         document.body.appendChild(pswToggle);
     }
-    
+    static async getInitialProps(){
+        let areas = await getCollectionRecords(AREA_COLLECTION)
+        let companies = await getCollectionRecords(EMPLOYER_COLLECTION)
+        let jobs = await getCollectionRecords(JOB_COLLECTION)
+        return {areas,companies,jobs}
+    }
     
  handleChange = (event) =>{
     this.setState({[event.target.name] : event.target.value});
@@ -86,7 +92,7 @@ handleSubmit = (event) => {
 
     render (){
         return (
-        <LayoutWithFooter title = "User Registration">
+        <LayoutWithFooter title = "User Registration" count={{empCount : this.props.companies.length, jobCount : this.props.jobs.length}}>
 
 <div className="modal fade" id="successModal" tabindex="-1" role="dialog" aria-hidden="true" style={{marginTop : 5+"em"}}>
   <div className="modal-dialog" role="document">

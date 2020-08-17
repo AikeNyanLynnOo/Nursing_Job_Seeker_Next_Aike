@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import LayoutWithFooter from '../components/LayoutWithFooter';
-import {getCollectionRecords,AREA_COLLECTION} from '../lib/db'
+import {getCollectionRecords,AREA_COLLECTION,EMPLOYER_COLLECTION,JOB_COLLECTION} from '../lib/db'
 
 export default class Index extends React.Component {
     constructor (props){
@@ -15,8 +15,9 @@ export default class Index extends React.Component {
     }
     static async getInitialProps(){
         let areas = await getCollectionRecords(AREA_COLLECTION)
-        
-        return {areas}
+        let companies = await getCollectionRecords(EMPLOYER_COLLECTION)
+        let jobs = await getCollectionRecords(JOB_COLLECTION)
+        return {areas,companies,jobs}
     }
     handleChange = (event) => {
         console.log(event.target);
@@ -31,7 +32,7 @@ export default class Index extends React.Component {
         console.log(areas)
         return (
             
-        <LayoutWithFooter title="Home">
+        <LayoutWithFooter title="Home" count={{empCount : this.props.companies.length, jobCount : this.props.jobs.length}}>
 <div className="slider-area ">
             
             <div className="slider-active">

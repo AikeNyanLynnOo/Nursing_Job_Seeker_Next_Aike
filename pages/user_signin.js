@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import LayoutWithFooter from '../components/LayoutWithFooter';
+import {getCollectionRecords,AREA_COLLECTION,EMPLOYER_COLLECTION,JOB_COLLECTION} from '../lib/db'
 
 export default class UserSignin extends React.Component {
     componentDidMount(){
@@ -10,10 +11,16 @@ export default class UserSignin extends React.Component {
 
         document.body.appendChild(script);
     }
+    static async getInitialProps(){
+        let areas = await getCollectionRecords(AREA_COLLECTION)
+        let companies = await getCollectionRecords(EMPLOYER_COLLECTION)
+        let jobs = await getCollectionRecords(JOB_COLLECTION)
+        return {areas,companies,jobs}
+    }
     render (){
         return (
             
-        <LayoutWithFooter title = "User Sign In">
+        <LayoutWithFooter title = "User Sign In" count={{empCount : this.props.companies.length, jobCount : this.props.jobs.length}}>
            <div className="section-top-border">
             <div className="row">
                 <div className="col-xl-5 col-lg-6 col-md-8 col-sm-10 mx-auto text-center form p-4">

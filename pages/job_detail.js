@@ -1,6 +1,6 @@
 import React from 'react'
 import Link from 'next/link'
-import {db, getCollectionRecords, AREA_COLLECTION, CITY_COLLECTION, EMPLOYER_COLLECTION} from '../lib/db'
+import {db, getCollectionRecords, AREA_COLLECTION, CITY_COLLECTION, EMPLOYER_COLLECTION, JOB_COLLECTION} from '../lib/db'
 import LayoutWithFooter from '../components/LayoutWithFooter'
 
 export default class JobDetail extends React.Component {
@@ -11,11 +11,12 @@ export default class JobDetail extends React.Component {
         let areas = await getCollectionRecords(AREA_COLLECTION)
         let cities = await getCollectionRecords(CITY_COLLECTION)
         let companies = await getCollectionRecords(EMPLOYER_COLLECTION)
+        let jobs = await getCollectionRecords(JOB_COLLECTION)
 
         const querySnapshot = await db.collection('job').doc(query.id).get()
         job = querySnapshot.data()
 
-        return {job,areas,cities,companies}
+        return {job,areas,cities,companies,jobs}
     }
 
     getCompanyName = (id) => {

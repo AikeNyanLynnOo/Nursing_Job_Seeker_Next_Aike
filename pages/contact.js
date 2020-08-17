@@ -1,13 +1,19 @@
 import React from 'react';
 import Link from 'next/link';
 import LayoutWithFooter from '../components/LayoutWithFooter';
+import {getCollectionRecords,AREA_COLLECTION,EMPLOYER_COLLECTION,JOB_COLLECTION} from '../lib/db'
 
 export default class Contact extends React.Component {
-    
+    static async getInitialProps(){
+        let areas = await getCollectionRecords(AREA_COLLECTION)
+        let companies = await getCollectionRecords(EMPLOYER_COLLECTION)
+        let jobs = await getCollectionRecords(JOB_COLLECTION)
+        return {areas,companies,jobs}
+    }
     render (){
         return (
             
-        <LayoutWithFooter title = "Contact us">
+        <LayoutWithFooter title = "Contact us" count={{empCount : this.props.companies.length, jobCount : this.props.jobs.length}}>
         
     <section className="contact-section">
         <div className="container">
