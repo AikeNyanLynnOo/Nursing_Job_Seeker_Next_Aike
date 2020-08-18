@@ -129,10 +129,7 @@ export default class JobListing extends React.Component {
         if(this.state.city !== ""){
             query = query.where('city','==',this.state.city)
         }
-        if(this.state.min_salary !== ""){
-            query = query.where('min_salary','>=',parseInt(this.state.min_salary))
-            query = query.orderBy("min_salary")
-        }
+        
         if(this.state.min_exp_year !== ""){
             query = query.where('min_exp_year','==',parseInt(this.state.min_exp_year))
         }
@@ -148,38 +145,77 @@ export default class JobListing extends React.Component {
                     if(this.state.posted_within !== ""){
                         if(this.state.posted_within == '1'){
                             if(this.checkDateEqual(doc.data().posted_date)){
-                                    jobs.push(Object.assign({
+                                if(this.state.min_salary !== ""){
+                                    doc.data().min_salary >= parseInt(this.state.min_salary) &&  jobs.push(Object.assign({
                                         id : doc.id,
                                         data : doc.data()
                                     }))
-                            }
+                                }else {
+                                    jobs.push(Object.assign({
+                                        id : doc.id,
+                                        data : doc.data()
+                                    }))  
+                                }
+                                }
                         }else if(this.state.posted_within == '2'){
                             if(this.checkDateLastThreeDays(doc.data().posted_date)){
+                                   if(this.state.min_salary !== ""){
+                                    doc.data().min_salary >= parseInt(this.state.min_salary) &&  jobs.push(Object.assign({
+                                        id : doc.id,
+                                        data : doc.data()
+                                        }))
+                                    }
+                                    else {
                                     jobs.push(Object.assign({
                                         id : doc.id,
                                         data : doc.data()
-                                    }))
+                                    }))  
+                                    }
                             }
                         }else if(this.state.posted_within == '3'){
                             if(this.checkDateLastSevenDays(doc.data().posted_date)){
-                                    jobs.push(Object.assign({
+                                   if(this.state.min_salary !== ""){
+                                    doc.data().min_salary >= parseInt(this.state.min_salary) &&  jobs.push(Object.assign({
                                         id : doc.id,
                                         data : doc.data()
                                     }))
+                                    }
+                                    else {
+                                    jobs.push(Object.assign({
+                                        id : doc.id,
+                                        data : doc.data()
+                                    }))  
+                                    }
                             }
                         }else if(this.state.posted_within == '4'){
                             if(this.checkDateThisMonth(doc.data().posted_date)){
-                                jobs.push(Object.assign({
-                                    id : doc.id,
-                                    data : doc.data()
-                                }))
+                                if(this.state.min_salary !== ""){
+                                    doc.data().min_salary >= parseInt(this.state.min_salary) &&  jobs.push(Object.assign({
+                                        id : doc.id,
+                                        data : doc.data()
+                                    }))
+                                }
+                                else {
+                                    jobs.push(Object.assign({
+                                        id : doc.id,
+                                        data : doc.data()
+                                    }))  
+                                }
                             }
                         }
                     }else{
-                        jobs.push(Object.assign({
-                            id : doc.id,
-                            data : doc.data()
-                        }))
+                        if(this.state.min_salary !== ""){
+                                    doc.data().min_salary >= parseInt(this.state.min_salary) &&  jobs.push(Object.assign({
+                                        id : doc.id,
+                                        data : doc.data()
+                                    }))
+                        }
+                        else {
+                                    jobs.push(Object.assign({
+                                        id : doc.id,
+                                        data : doc.data()
+                                    }))  
+                        }
                     }
                     
                 })
